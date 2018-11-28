@@ -2,12 +2,9 @@ The following code casts an initial integer value as a float and a pointer, and 
 
 ```c++
 #include <stdio.h>
-#include <iostream>
-#include <string.h>
+#include "byte.h"
 
 using namespace std;
-
-typedef unsigned char *byte_pointer;
 
 void show_bytes(byte_pointer start, size_t len){
     int i;
@@ -15,7 +12,6 @@ void show_bytes(byte_pointer start, size_t len){
     printf(" %.2x", start[i]);
     printf("\n");
 }
-
 
 void show_int(int x){
 /*
@@ -45,20 +41,15 @@ void test_show_bytes(int val){
     show_pointer(pval);
 }
 
-int main()
-
-{
-    int anyNumber;
-    const char *m = "abcdefg";
-    
-
-    cout << "Input any number\n";
-    cin >> anyNumber;
-    test_show_bytes(anyNumber);
-
-    show_bytes((byte_pointer) m, strlen(m));
-
-}
-
 ```
+What's interesting is the missed point of introducing pointer arithmetic. In the show bytes function, the byte pointer can simply be treated as a counter in and of itself by incrementing its value by 1, dereferncing and printing until the max length is reached, as shown here:
 
+```c++
+void show_bytes(byte_pointer start, size_t len){
+    int i;
+    for (i=0; i < len; i++)
+    printf(" %.2x", *start+i);
+    printf("\n");
+}
+```
+Alternatively, if the pointer is of a different size, an increment of 1 will equate a jump in address by some number of bytes corresponding to the pointer type (by 4 bytes in the case of int for example, 8 for floats).

@@ -17,7 +17,6 @@ z as a pointer adress is passed a copy however.
 /**/
     show_bytes((byte_pointer) &x, sizeof(int));
     
-
 }
 
 void show_float(float x){
@@ -29,11 +28,33 @@ void show_pointer(void *x){
     show_bytes((byte_pointer) &x, sizeof(void *));
 }
 
+
+void show_double(double x){
+    show_bytes((byte_pointer) &x, sizeof(double));
+}
+
+
+void show_short(short x){
+    show_bytes((byte_pointer) &x, sizeof(short));
+}
+
+
+void show_long(long x){
+    show_bytes((byte_pointer) &x, sizeof(long));
+}
+
+
 void test_show_bytes(int val){
     int ival = val;
     float fval = (float) ival;
     int *pval = &ival;
+    short sval = (short) val;
+    long lval = (long) val;
+    double dval = (double) val;
     show_int(val);
     show_float(fval);
     show_pointer(pval);
+    show_short(sval);
+    show_long(lval);
+    show_double(dval);
 }

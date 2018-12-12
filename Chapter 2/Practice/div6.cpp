@@ -11,12 +11,12 @@ return ( x +bias )>> 4;
 }
 
 
-void show_bytes(string &start, size_t len){
+void test_int(string &start, size_t len){
     int i;
     int e=0;
     for (i=0; i < len; i++)
     {
-    if(start[i] == 0x2e) throw e;
+    if(start[i] == 0x2e || start[i] <0x30 || start[i] > 0x39 ) throw e;
     
     }
    
@@ -29,7 +29,7 @@ int main(){
     cout << "Input an integer, positive or negative \n";
     cin >>x;
     try{
-        show_bytes(x, x.length());
+        test_int(x, x.length());
 
 
     } catch(int notInt)

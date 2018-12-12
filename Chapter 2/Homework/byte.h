@@ -10,4 +10,10 @@ void show_float(float x);
 
 void show_pointer(void *x);
 
+void show_long(long x);
+
+void show_short(short x);
+
+void show_double(double x);
+
 void test_show_bytes(int val);

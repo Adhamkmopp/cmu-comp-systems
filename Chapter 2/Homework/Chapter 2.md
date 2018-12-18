@@ -1,7 +1,7 @@
 
 ### 2.5.7
 
-using namespace std;
+```c++
 
 void test_int(string &start, size_t len){
     int i;
@@ -36,8 +36,11 @@ int main()
   
 
 }
+```
 
 ### 2.5.8
+```c++
+
 int is_little_indian(){
     int test_byte = 0xff;
     byte_pointer start = (byte_pointer) &test_byte;
@@ -55,8 +58,11 @@ cout << (( whatis == 0) ? "This machine is Little Endian" : "This machine is Big
 
 
 }
+```
 
 ### 2.6.0
+```c++
+
 
 int replace_byte(unsigned &old_hex, int loc, unsigned rep_hex){
     byte_pointer new_hex = (byte_pointer) &old_hex;
@@ -70,8 +76,9 @@ cout << "The new hex is "; replace_byte(x, 2, 0xAB);
 show_bytes((byte_pointer) &x, sizeof(unsigned)); 
 
 }
-
+```
 ### 2.6.1
+```c++
 
 int main (){
 int anyNum;
@@ -99,8 +106,10 @@ cout<< msb;
 cout << "Number includes a 1 in the most signfificant bit:" << bits<< endl;
 
 }
-
+```
 ### 2.6.2
+```c++
+
 int int_shifts_are_arithmetic (){
     int testNum= -1;
     int shift_size = ((sizeof(int) -1) << 3) + 7;
@@ -123,8 +132,9 @@ int endresults = int_shifts_are_arithmetic();
 
 
 }
-
+```
 ### 2.6.3
+```c++
 
 unsigned srl (unsigned x, int k){
     unsigned xsra = (int) x >> k;
@@ -137,8 +147,9 @@ signed sra(int x, int k){
     int size = sizeof(int) * 8;
     return (xsrl | ~(0x1 << (size -1)) >> k);
 }
-
+```
 ### 2.6.4
+```c++
 
 int any_odd_one(unsigned x){
 return ( (x | 0xAAAAAAAA) == 0xAAAAAAAA);
@@ -152,3 +163,4 @@ cin >> anyNum;
 int bit_test = any_odd_one(anyNum);
 cout << "Number includes an odd 1 bit somewhere:" << bit_test << endl;
 }
+```

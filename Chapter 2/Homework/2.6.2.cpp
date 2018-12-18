@@ -13,7 +13,7 @@ int int_shifts_are_arithmetic (){
     int newNum = testNum >> shift_size;
     cout << newNum << endl;
     bool res;
-    res = (newNum == testNum);
+    res = (newNum ^ testNum);
     return res;
 
 }

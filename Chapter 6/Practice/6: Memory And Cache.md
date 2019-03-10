@@ -4,12 +4,12 @@
 This is not a particularly difficult chapter, but it is loaded with information. The main bulk of it is informational; bus design, memory design, cache design and so on with little in the way of improving coding performance. As such, a quick visual summary above was more than sufficient for a complete overview of the chapter, alongwith some key terms:
 
 
-*Memory Mapped I/O: reserved address space for devices (each, a port).
-*Good locality: which includes temporal (how often a single variable is accessed for read or write), and spatial (how well is key for exploiting cache availability.
-*Cache miss: a victim block is evicted following a block replacement policy (Least Recently Used seems to be a fan favorite).
-*Cache placement: not random, too expensive, organized placement in some way. 
-*Logical Disk Block: translation into actual (surface, track, sector) triplets handled by the disk controller firmware for the OS.
-**Formatting: filling gaps with sector IDs/ designating spare cylinders.
+* Memory Mapped I/O: reserved address space for devices (each, a port).
+* Good locality: which includes temporal (how often a single variable is accessed for read or write), and spatial (how well is key for exploiting cache availability.
+* Cache miss: a victim block is evicted following a block replacement policy (Least Recently Used seems to be a fan favorite).
+* Cache placement: not random, too expensive, organized placement in some way. 
+* Logical Disk Block: translation into actual (surface, track, sector) triplets handled by the disk controller firmware for the OS.
+* Formatting: filling gaps with sector IDs/ designating spare cylinders.
 
 Miss Types:
 

@@ -1,7 +1,6 @@
 ![Some kind of way of dealing with the mass of information in this chapter](https://raw.githubusercontent.com/Adhamkmopp/cmu-comp-systems/master/Extras/ch6.jpg)
 
-
-This is not a particularly difficult chapter, but it is loaded with information. The main bulk of it is informational; bus design, memory design, cache design and so on with little in the way of improving coding performance. As such, a quick visual summary above was more than sufficient for a complete overview of the chapter, alongwith some key terms:
+Although not a particularly difficult chapter,  it is loaded with information. The main bulk of it is informational; bus design, memory design, cache design and so on with little in the way of improving coding performance. As such, a quick visual summary above was more than sufficient for a complete overview of the chapter, alongwith some key terms:
 
 
 * Memory Mapped I/O: reserved address space for devices (each, a port).

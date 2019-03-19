@@ -151,6 +151,6 @@ void *dlopen(const char *filename, int flag); /* flag being RTLD_GLOBAL, RTLD_NO
 void *dlsym(void *handle, char *symbol); /* returns address to a symbol in the handle (shared library above) */
 ```
 
-## Position Independant Code
+## Library Interpositioning
 
 Code segments are dropped anywhere in memory to be shared by whoever.

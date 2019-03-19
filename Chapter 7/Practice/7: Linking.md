@@ -72,7 +72,7 @@ typedef struct{
 ```
 
 Relocating 
-
+```
 >	foreach section s{
 >		foreach relocation entry r{
 >			refptr = s + r.offset;	/*ptr to reference to be relocated*/
@@ -86,6 +86,7 @@ Relocating
 >			*refptr = (unsigned) (ADDR(r.symbol) + r.addend);
 >	}
 > }
+```
 
 ```c
 int sum (int *a, int n);		int sum(int *a, int n)

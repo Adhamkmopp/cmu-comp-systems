@@ -73,11 +73,11 @@ typedef struct{
 
 Relocating 
 
-> foreach section s{
->	foreach relocation entry r{
->		refptr = s + r.offset;	/*ptr to reference to be relocated*/
->		/*relocate a PC-relative reference*/
->		if (r.type == R_X86_64_PC32){
+>	foreach section s{
+>		foreach relocation entry r{
+>			refptr = s + r.offset;	/*ptr to reference to be relocated*/
+>			/*relocate a PC-relative reference*/
+>			if (r.type == R_X86_64_PC32){
 >			refaddr = ADDR(s) + r.offset /*ref's runtime address*/
 >			*refptr = (unsigned) (ADDR(r.symbol) + r.addend - refaddr);
 >		}

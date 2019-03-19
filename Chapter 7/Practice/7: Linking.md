@@ -1,4 +1,4 @@
-#  Linking: Interestring But Badly Written
+#  Linking: Interesting But Badly Written
 
 ... (.cpp)> Preprocessor (ASCII)> Compiler (.s)> Assembler (relocatable object file(.o)) > Linker (executable object file)
 
@@ -71,7 +71,8 @@ typedef struct{
 } Elf64_Rela;
 ```
 
-Relocating 
+## Relocating Algorithm:
+
 ```
 >	foreach section s{
 >		foreach relocation entry r{
@@ -114,7 +115,7 @@ int main(){			for(i=0; i<n;i++){
   17:	c3                   	retq   
 ```
 
-Additionally,
+## Relocation Structs
 
 ```c
 Elf64_Rela sum = {

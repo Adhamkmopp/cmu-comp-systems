@@ -3,6 +3,9 @@
 #include <string.h>
 #include <iostream>
 #include <assert.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 
 
 /* The L1 cache on this machine is 8-way associative, 64B per line (16 ints) split over 64 sets. */
@@ -16,7 +19,7 @@ void transpose (int *dst, int *src, int dim){
 		for (j = 0; j < dim; j++)
 			dst[j*dim + i] = src[i*dim + j];
               t = clock() - t;
-  printf ("It took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
+  printf ("A took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
 }
 
 
@@ -37,7 +40,7 @@ void transpose_4x1 (int *dst, int *src, int dim){
 			dst[j*dim + i] = src[i*dim + j];
 	}
       t = clock() - t;
-  printf ("It took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
+  printf ("B took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
 }
 
 void transpose_c (int *dst, int *src, int dim){
@@ -64,7 +67,7 @@ void transpose_c (int *dst, int *src, int dim){
     for (j = h; j < dim; j++)
       dst[j * dim + i] = src[i * dim + j];
         t = clock() - t;
-  printf ("It took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
+  printf ("C took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
 }
 
 
@@ -118,7 +121,7 @@ void transpose_a (int *dst, int *src, int dim){
 	}
 
   t = clock() - t;
-  printf ("It took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
+  printf ("D took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
 }
 
 
@@ -152,7 +155,7 @@ void transpose_4x1c (int *dst, int *src, int dim){
     for (j = h; j < dim; j++)
       dst[j * dim + i] = src[i * dim + j];
         t = clock() - t;
-  printf ("It took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
+  printf ("E took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
 }
 
 
@@ -163,7 +166,7 @@ int main (){
     std::fill_n(a, (512*512), -3);
     std::fill_n(b, (512*512), 3);
 
-
+    fork();
     
 
 

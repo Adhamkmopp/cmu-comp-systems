@@ -1,18 +1,7 @@
-#  Linking: Interesting But Badly Written
-
-... (.cpp)> Preprocessor (ASCII)> Compiler (.s)> Assembler (relocatable object file(.o)) > Linker (executable object file)
-
-Note:
-
-1.	extern specifically tells the compiler that the variable is defined elsewhere
-2.	systems code preceeds every executable
 ## The Linker:
 
-I.	Symbol resolution: symbol references to definitions
-II.	Relocation: fix addresses from relocation entires (assemlber)
+All object files are streams of contiguous bytes that carry extra information on how those bytes should be handled. That extra information is in the form of sections that define values, types, names, and addresses of the different symbols hidden within the bytes themselves. Those sections are organized into an Executable and Linkable Format (ELF) as given below: 
 
-
-ELF:
 
 1.	ELF Header: word size/byte ordering/type + machine type(x86)/section header table file offset and number of entries
 1.	Seaction Header Table:  Location and size of each section 
@@ -28,9 +17,11 @@ ELF:
 1.	Pseudosections (*relocatable only*):
 	1.	ABS: symbols not to be relocated
 	2.	UNDEF: undefined, referenced here but defined elsewhere
-	3.	COMMON: uninitialized -global, ofcourse- symbols; size is minimum, value is alignment restriction
+	3.	COMMON: uninitialized -global, ofcourse- symbols; size is minimum, value is alignment restriction. COMMON sections hold weak values as  measure of deferrance on which will be chosen.
 
-*Local variables are kept on the stack, not on the object file. Weird.
+*Local variables are kept on the stack, not on the object file.
+
+Below is the structure of a symbol entry in the symbol table. The name is a byte offset into the string (.strtab) section, and the value is a byte offset into the section where the symbol is defined, or as an absolute run-time address if on an exectuable file. 
 
 ```c
 
@@ -47,39 +38,50 @@ typedef struct{
 
 ```
 
+The linker's function ultimately is to go through the sections associating symbol references to one and only unique definition (symbol resolution) and to perform relocation if necessary when combining multiple files.
+
+---
+
 ## Symbol Resolution:
 
 1.	Multiple Symbols:
 	1.	Multiple strongs lead to error
 	2.	One strong, multiple weaks? pick strong
 	3.	Multiple weaks? pick whatever
-2.	Static Libraries: collection of binary, select and include the relocatalbe #included in order, add unresolved referenced variables to U, or resolve and add to D and select modules to add to E selectively.
+
+
+## Static Libraries
+
+These are simply concatenations of important and frequently used object files for use within a program. They carry an .a extension and may be created with the *arr rcs lib.a obj1.o obj2.o* command and complied with the *gcc -static prog2c main2.o ./lib.a* command. The main issue is that the algorithm resolves references in order, so it is advisable to keep libraries at the very end and construct them to run as independantly as possible.
+
 
 ## Relocation:
 
-Relocating sections: merge all setions of the same type and assign run-time memory addresses for the new sections
-Relocating symbols: within serctions, update run-time addresses for them all
+1.	Relocating sections: merge all setions of the same type and assign run-time memory addresses for the new merged sections
+1.	Relocating symbols: within serctions, update run-time addresses for them all relying on relocation entries
 
-Relocation entries:
+## Relocation entries:
 
 ```c
 typedef struct{
-	long offset;	/*section offset */
-	long type:32.	/*relocation type like R_X86_64_PC32
-	     symbol:32;	/*symbol table index*/
+	long offset;	/*section offset of the reference to relocate */
+	long type:32.	/*relocation type like R_X86_64_PC32 */
+	     symbol:32;	/*the symbol entry name where the reference is actually defined*/
 	long addend;	/*not always used, offset on top of offset*/
 } Elf64_Rela;
 ```
 
 ## Relocating Algorithm:
+ADDR(r.symbol) is the run-time address of the function or variable, where it is defined.ADDR(s) is the run-time address of a section.
+
 
 ```
 >	foreach section s{
 >		foreach relocation entry r{
->			refptr = s + r.offset;	/*ptr to reference to be relocated*/
+>			refptr = s + r.offset;	/*ptr to reference to be relocated. all 0's initially*/
 >			/*relocate a PC-relative reference*/
 >			if (r.type == R_X86_64_PC32){
->			refaddr = ADDR(s) + r.offset /*ref's runtime address*/
+>			refaddr = ADDR(s) + r.offset /*ref's runtime address i.e. where it is referenced */
 >			*refptr = (unsigned) (ADDR(r.symbol) + r.addend - refaddr);
 >		}
 >		/*relocate an absolute address*/ 
@@ -131,18 +133,20 @@ The linker has also determined that ADDR(s) = ADDR(.text) = 0x4004d0, then the s
 
 ## Loading:
 
-There isn't much here that's noteworthy aside from  the fact that the run-time heap (allocated by malloc) grows upward, and the user stack grows downward (from 2<sup>48</sup> both sandwiching the memory mapped region for shared libraries. A Loader function handles copying everything into memory guided by the program header.
+1.	The run-time heap (allocated by malloc) grows upward, and the user stack grows downward (from 2<sup>48</sup> both sandwiching the memory mapped region for shared libraries. 
+1.	An exectuable contains an init section that defines a small _init function. 
+1.	A Loader function handles copying everything into memory guided by the program header which contains alignment information, starting virtual address, and the entry point.
+1.	The entry point is the _start function which calls the system startup function __lib_start_main which is contained in the libc.so library (always linked on compilation).
+1.	The .bss section is initialized to zero at runtime.
 
 ## Dynamic Linking:
 
-Shared libraries (DLLs, finally, mystery solved) are loaded into arbritrary memory location by a dynamic linker along with the partially linked code of our program, then the linking is performed before passing control back to the loader which then initiates the program at the entry point. They are shared by multiple processees at once.
+Shared libraries (DLLs, finally, mystery solved) are loaded into arbritrary memory location by a dynamic linker along with the partially linked code of our program, then the linking is performed before passing control back to the loader which then initiates the program at the entry point. They .text section is shared by multiple processees at once.
 
-linux> gcc -shared -fpic -o libvector.so addvec.c multvec.c
-linux> gcc -o prog21 main2.c ./libvector.so
+No code is actually copied into the exectuable, but the relocations tables and symtables is copied to allows resolving of references from libvector at runtime. The dynamic loader then relocates the code from libvector.so to some memory segment, and resolves all references.
 
-No code is actually copied into the exectuable, but the relocations tables and symtables is copied to allows resolving of references from libvector at runtime. The dynamic loader then relocates the code from libvector.so to some memory segment, and resolves all references. I don't know if that means that libvector is in and of itself a reloctable binary object, or if it's copied in memory, or if it's eligable for use by any and all other processees. This is a badly written chapter about an already confusing topic. Shame.
+Libraries can also be linked *during* runtime using an in-text C function:
 
-This is not the same as actually linking *dynamically* (what is this bullshit?) through the application after it has begun execution.
 
 ```c
 #include <dlfcn.h>
@@ -150,7 +154,19 @@ This is not the same as actually linking *dynamically* (what is this bullshit?) 
 void *dlopen(const char *filename, int flag); /* flag being RTLD_GLOBAL, RTLD_NOW or RTLD_LAZY*/
 void *dlsym(void *handle, char *symbol); /* returns address to a symbol in the handle (shared library above) */
 ```
+The function dlopen loads and links a dynamic library with options on when to perform symbol resolution. The second function returns a pointer to a symbol.
+
 
 ## Position Independant Code
 
-Code segments are dropped anywhere in memory to be shared by whoever.
+Code segments are dropped anywhere in memory to be shared by whoever. The code segment is read only and references data by a relative jump into the data section's global offset table (GOT), which in turn is relocated once a library is built.
+
+
+
+Note:
+
+1.	extern specifically tells the compiler that the variable is defined elsewhere
+2.	systems code preceeds every executable
+3.	R_386_COPY is used in dynamic linking for defining extern variables that reference global variables in the .so. The relocation entry then changes the address of the variable to the address defined in the executable, not in the .so.
+4.	function pointers: void (*addvec) (int *, int *, int *, int) is a pointer valled addvec to a function that returns nothing and takes in 3 pointers and an int as parameters.
+5.	__i686.get_pc_thunk.bx: mov(%esp), %ebx: loads the current instruction address into ebx

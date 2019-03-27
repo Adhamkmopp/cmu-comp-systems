@@ -157,7 +157,7 @@ void *dlsym(void *handle, char *symbol); /* returns address to a symbol in the h
 The function dlopen loads and links a dynamic library with options on when to perform symbol resolution. The second function returns a pointer to a symbol.
 
 
-## Position Independant Code
+## Library Interpositioning
 
 Code segments are dropped anywhere in memory to be shared by whoever. The code segment is read only and references data by a relative jump into the data section's global offset table (GOT), which in turn is relocated once a library is built.
 

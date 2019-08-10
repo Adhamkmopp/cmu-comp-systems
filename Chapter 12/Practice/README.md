@@ -3,7 +3,7 @@
 ## Concurrency Models
 There are three main concurrency models, each with its own merits and drawbacks and not all are interchangable: I/O multiplexing for example is very specific to file descriptor inputs and choices are locked in once a file descriptor is ready. A process based approach on the other hand, sets a child process up and running with its own context - an expensive, and inefficient operation- while a thread based approach address the drawbacks of both methods, while retaining their respective merits.
 
-### Processes based
+### Process based
 
 
 Fork and exec, as the example below shows. A child process is forked and concurrency/context switcing is left up to the CPU.

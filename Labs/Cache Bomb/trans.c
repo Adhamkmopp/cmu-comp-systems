@@ -47,7 +47,10 @@ void trans(int M, int N, int A[N][M], int B[M][N])
 }
 
 
-char trans_block_desc[] = "Simple block transpose";
+/* 
+ * trans_block - transpose in blocks of 4 or 8, and goes over the remainder separately.
+ */
+char trans_block_desc[] = "Transpose by blocks (adjusted to matrix size)";
 void trans_block(int M, int N, int A[N][M], int B[M][N]){
 
     int j, k, kk, jj;
@@ -60,12 +63,11 @@ void trans_block(int M, int N, int A[N][M], int B[M][N]){
     } else if (M==32){
         bsize = 8;
         row_b =col_b = bsize; 
-        row_en = col_en = bsize * (M/bsize); /* Amount that fits evenly into blocks */
+        row_en = col_en = bsize * (M/bsize);
     } else {
         bsize = 8;
         row_b =col_b = bsize; 
-        row_en = col_en = bsize * (M/bsize); /* Amount that fits evenly into blocks */
-
+        row_en = col_en = bsize * (M/bsize); 
     }
         
 
@@ -97,9 +99,17 @@ void trans_block(int M, int N, int A[N][M], int B[M][N]){
 
 }
 
-char trans_block_desc_plus[] = "Simple block transpose plus";
-void trans_block_plus(int M, int N, int A[N][M], int B[M][N]){
-    int j, k, kk, jj, i;
+
+
+/* 
+ * trans_block_zig - this function attempts to transpose in blocks as before, but goes through the rows and
+ * columns in a zigzag fashion -- the idea is to account for write misses as well
+ */
+
+char trans_block_zig_desc[] = "Transpose by zigzags in blocks";
+void trans_block_zig(int M, int N, int A[N][M], int B[M][N]){
+
+    int j, k, kk, jj, shift;
     int row_b, col_b, bsize, col_en, row_en;
     
     if (M ==64){
@@ -107,58 +117,77 @@ void trans_block_plus(int M, int N, int A[N][M], int B[M][N]){
         row_b =col_b = bsize; 
         row_en = col_en = bsize * (M/bsize); /* Amount that fits evenly into blocks */
     } else if (M==32){
-        bsize = 8;
+        bsize = 4;
         row_b =col_b = bsize; 
-        row_en = col_en = bsize * (M/bsize); /* Amount that fits evenly into blocks */
-    } 
+        row_en = col_en = bsize * (M/bsize);
+    } else {
+        bsize = 4;
+        row_b =col_b = bsize; 
+        row_en = col_en = bsize * (M/bsize); 
+    }
         
 
-    for (kk = 0; kk < col_en; kk += col_b) {
-        for (jj = 0; jj < row_en; jj += row_b) {
-            i=0;
-            for (k = kk; k < kk + row_b; k++) {
-                for (j = jj + i; j < jj + col_b; j++) {
-                    
-                    B[j][k] = A[k][j];
-                        
-                }
-                i++;                 
-            }           
-        } 
+for (kk = 0; kk < col_en; kk += col_b) {
+    for (jj = 0; jj < row_en; jj += row_b) {
+        for(shift = 0; shift < col_b; shift++){
+        j = jj;
+            for ( k = kk + shift; k < kk + col_b; k++) {
+                B[j][k] = A[k][j];
+                B[k][j] = A[j][k];
+                j++;  
+            }
+        }
     }
-
-    for (kk = 0; kk < col_en; kk += col_b) {
-        for (jj = 0; jj < row_en; jj += row_b) {
-            i=0;
-            for (k = kk; k < kk + row_b; k++) {
-                for (j = jj; j < jj + i; j++) {
-                    
-                    B[j][k] = A[k][j];
-                        
-                }
-                i++;                 
-            }           
-        } 
-    }
-
-
-    for (j = 0; j < N; j++) {
-        for (k = col_en; k < M; k++) {
-            B[k][j] = A[j][k];
-                        
-        }                   
-    }
-
-    for (j = row_en; j < N; j++) {
-        for (k = 0; k < M; k++) {
-            B[k][j] = A[j][k];
-                        
-        }                   
-    }
+}
 
 }
 
-   
+char trans_block_tri_desc[] = "Transpose by upper and lower triangles in blocks";
+void trans_block_tri(int M, int N, int A[N][M], int B[M][N]){
+
+    int j, k, kk, jj, shift;
+    int row_b, col_b, bsize, col_en, row_en;
+    
+    if (M ==64){
+        bsize = 4;
+        row_b =col_b = bsize; 
+        row_en = col_en = bsize * (M/bsize); /* Amount that fits evenly into blocks */
+    } else if (M==32){
+        bsize = 4;
+        row_b =col_b = bsize; 
+        row_en = col_en = bsize * (M/bsize);
+    } else {
+        bsize = 4;
+        row_b =col_b = bsize; 
+        row_en = col_en = bsize * (M/bsize); 
+    }
+        
+
+for (kk = 0; kk < col_en; kk += col_b) {
+    for (jj = 0; jj < row_en; jj += row_b) {
+        for(shift = 0; shift < col_b; shift++){
+        j = jj;
+            for ( k = kk + shift; k < kk + col_b; k++) {
+                B[j][k] = A[k][j];                
+                j++;  
+            }
+        }
+    }
+}
+
+for (kk = 0; kk < col_en; kk += col_b) {
+    for (jj = 0; jj < row_en; jj += row_b) {
+        for(shift = 0; shift < col_b; shift++){
+        j = jj;
+            for ( k = kk + shift; k < kk + col_b; k++) {
+                B[k][j] = A[j][k];                
+                j++;  
+            }
+        }
+    }
+}
+
+}
 
 
 /*
@@ -176,9 +205,8 @@ void registerFunctions()
     /* Register any additional transpose functions */
     registerTransFunction(trans, trans_desc); 
     registerTransFunction(trans_block, trans_block_desc);
-
-    registerTransFunction(trans_block_plus, trans_block_desc_plus); 
-
+    registerTransFunction(trans_block_zig, trans_block_zig_desc);
+    registerTransFunction(trans_block_tri, trans_block_tri_desc);
 
 }
 

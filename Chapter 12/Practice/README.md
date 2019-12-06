@@ -1,7 +1,7 @@
 # Chapter 12: Concurrent Programming
 
 ## Concurrency Models
-There are three main concurrency models, each with its own merits and drawbacks and not all are interchangable: I/O multiplexing for example is very specific to file descriptor inputs and choices are locked in once a file descriptor is ready. A process based approach on the other hand, sets a child process up and running with its own context - an expensive, and inefficient operation- while a thread based approach address the drawbacks of both methods, while retaining their respective merits.
+There are three main concurrency models, each with its own merits and drawbacks and not all are interchangable: I/O multiplexing for example is very specific to file descriptor inputs and choices are locked in once a file descriptor is ready. Logical flows run within a single context, and schedueling is set expicitly by the application. A process based approach on the other hand, is based on creating child processes - an expensive, and inefficient operation- with its own virtual memory space where logical flows are scheudeled by the kernel. Lastly, a thread based approach addresses the drawbacks of both methods while retaining their respective merits; scheudeling is taken over by the kernel, but a single address space is common between all threads.
 
 ### Process based
 
@@ -12,7 +12,7 @@ Fork and exec, as the example below shows. A child process is forked and concurr
 
 /* 
  * echoserverp.c - A concurrent echo server based on processes
- */
+ */ 
 /* $begin echoserverpmain */
 #include "csapp.h"
 void echo(int connfd);
@@ -74,17 +74,14 @@ One way around that issue is by implementing a finer granuality ("Event Driven" 
 
 ## Concurrency With Threads
 
-Threads are logical flows within the same process, running concurrently and schedueled by the kernel. It is a hybrid of the above two methods. Each thread has its own unique integer ID, stack, stack pointer, program counter and general purpose registers despite sharing the same virtual address space including the heap.
+Threads are logical flows within the same process, running concurrently and schedueled by the kernel. It is a hybrid of the above two methods. Each thread has its own unique integer ID, stack, stack pointer, program counter and general purpose registers despite sharing the same virtual address space including the heap. In essence, a child process within the same context as before but with a common address space.
 
-Threads begin as a main thread that creats a pool of *peer* thread, with the right to kill other threads or wait till termination. Context switches also apply to threads but is much faster given that it's much smaller than a process context. They also share the same data. In other words, threads are just independant run functions much like forking a process but are less expensive, and do share the same virtal address space. It has nothing to do with being inherently parallel or *"multi-core"*.
+Threads begin as a main thread that creats a pool of *peer* thread, with the right to kill other threads or wait till termination. There is no strict parent/child hierarchy. Context switches also apply to threads but is much faster given that it's much smaller than a process context. They also share the same data. In other words, threads are just independant run functions much like forking a process but are less expensive, and do share the same virtal address space. It has nothing to do with being inherently parallel or *"multi-core"*. Parellalism is a subset of concurrency.
 
 ### POSIX Thread
 
-Pthreads is a collection of APIs of over 60 functions that is the standard for manipulating and maintaining threads in C programs. The example below is a threaded "hello world" program based on pthreads.
-
-### Creating Threads
-
-The create function creates a new thread, sets the tid to the new thread ID and starts the thread in its own, new context by running the associated function. Args are the arguments passed to the functoin itself, and if the need arises that more than one argument need to be passed, then it should be placed in a struct or some other type of object and passed as a pointer.
+Pthread is a collection of APIs of over 60 functions that is the standard for manipulating and maintaining threads in C programs.They act as children still and will need to be reaped by the main thread.
+The create function below creates a new thread, sets the tid object to the new thread ID and starts the thread in its own, new context by running the associated function. The function takes a single *args* pointer. These are the arguments passed to the function itself, and if the need arises that more than one argument need to be passed, then it should be placed in a struct or some other type of object and passed as a pointer. Return values are actually pointers that can be collected by the pthread_join function at the time of reaping terminated threads.
 
 ~~~c
 typedef void *(func)(void *);
@@ -93,27 +90,26 @@ int pthread_create(pthrea_t *tid, pthread_attr_t *attr, func *f, void *arg);
 pthread_t pthread_self(void); /* which thread am I ? */
 ~~~
 
-### Terminating Threads
+Likewise, terminating a thread is done through the pthread_exit or pthread_cancel functions with differing behaviour depending on whether the main thread or one of the peer threads made the call. Termination can also be done implictly when the main thread simply returns, or calls to the unix exit function from *any* peer thread that leads to the termination of the entire process.
 
 ~~~c
 #include <pthread.h>
 void pthread_exit (void *thread_return); /* terminates all threads and then itself and the process.
                                           * returns the thread return value
                                           */
-int pthread cancel(pthread_t tid);        /* peer thread termiantes itself, so long as the tid is correct */
+int pthread_cancel(pthread_t tid);        /* peer thread termiantes itself, so long as the tid is correct */
 
 ~~~
 
-### Reaping Threads
+Threads also need to be reaped after termination. The pthread_join function stores the generic (void *) pointer returned by the thread routine in thread_return and blocks the main thread until thread termination by specific ID. Meaning, it cannot wait for any arbitrary thread to temrinate. The thread in question has to be waited on explicitly, which avoids all the shenanigins caused by the equivalent wait() function in process handling.
 
-The function stores the generic (void *) pointer returned by the thread routine in thread_return and blocks the main thread until thread termination by specific ID, meaning, it cannot wait for any arbitrary thread to temrinate. The thread in question has to be waited on explicitly, which avoids all the shenanigins caused by the equivalent wait() function in process handling.
 ~~~c
 int pthread_join(pthread_t tid, void **thread_return);
 ~~~
 
 ### Detaching Threads
 
-Threads are joinable by default, meaning they can be killed and reaped by other threads. Detached threads are non-killable, but their memory resources are reaped automatically on termination which can be convenient in some cases. The function detaches a joinable thread, and can be called on itself with the argument pthread_self().
+Threads are joinable by default, meaning they can be killed and indeed have to be reaped by other threads. Detached threads are non-killable, but their memory resources are reaped automatically on termination which can be convenient in some cases. The function detaches a joinable thread, and can be called on itself with the argument pthread_self().
 
 ~~~c
 int pthread_detach(pthread_t id);

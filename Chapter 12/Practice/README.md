@@ -117,21 +117,19 @@ int pthread_detach(pthread_t id);
 
 ### Initializing Threads
 
-The stack is shared between all threads which segregates variables into 3 distinct classes:
+The virtual memory space is shared between all threads, and not all thread stacks are protected, which segregates variables into 3 distinct classes:
 
-1.  Global variables: referenced only once, shared by all threads.
+1.  Global variables: instanced only once, shared by all threads.
 2.  Local automatic: variables decalred inside thread routines without the static attribute. Each thread gets its own local copy on its own stack.
-3.  Local static: static variables are declared once and shared by all, much like a global variable. 
-
+3.  Local static: static variables are declared once and shared by all peer threads, much like a global variable, but invisible to the main thread.
+ 
 ## Synchronization
 
-Shared variables, global or static, are prone of being out of sync if multiple threads are perfoming concurrent operations involving updating the variable at some point. Primarily because breaking down an instruction into loads and saves can lead to a variable being saved in some thread after it was loaded and saved by another thread. This leads to the concept of a *progress graph*: a k-dimensional graph where each dimension represents a thread, and each discrete point on some dimension the current progress of an instruction. A vector is the progress of all dimensions at a certain point in time. This leads to discrete areas of *critical sections* that consitute an unsafe region. Tragectories skirting an unsafe region are safe. The idea is to make a global variable's access mutually exclusive to a particular thread until the critical section passes.
+Shared variables, global or static, are prone of being out of sync if multiple threads are perfoming concurrent operations involving updating the variable. Primarily because breaking down an instruction into loads and saves can lead to a variable being saved in some thread after it was loaded and saved by another thread. This leads to the concept of a *progress graph*: an n-dimensional graph where each dimension represents a thread, and each discrete point on some dimension the current progress of an instruction. A vector is the progress of all dimensions at a certain point in time. This leads to discrete areas of *critical sections* that consitute an unsafe region. Tragectories skirting an unsafe region are safe. The idea is to make a global variable's access mutually exclusive to a particular thread until the *critical section* passes.
 
 ### Semaphores
 
-A variable. Plain and simple. Used to regulate the usage of other common variables between concurrent threads. There need be a P routine either suspends operation on a thread or returns immediately after decrementing the semaphore. Threads are restarted by a V routine that increments the semaphore, but does not control which thread is restatred. The semaphore is then immediately decremented to zero again by P and returned to the caller.
-
-What is implied here is that V has to be called repeatedly to restart all blocked threads, and P has to be called repeatedly as well to block all threads at the critical section junction (I think).
+A global variable of value 0 or 1. Used to regulate the usage of other common variables between concurrent threads. There need be a P routine that either suspends the operation if the semaphore is 0, or decrements the semaphor and returns immediately. A suspended thread is *holding* the semaphore value of 0 at P, and it restarted by a V operation that increments the semaphore and signals that the semaphore value has been incremented to any *one* of the holding threads. 
 
 ~~~c
 
@@ -143,10 +141,7 @@ int sem_wait(sem_t *s); //P
 int sem_pot(sem_t *s);  //V
 ~~~
 
-Some terminology: a semaphore for mutual exclusion is always 0 or 1 and is given the very sexy name *mutexes*. A P operation is locking the mutex while V unloocks it (amazing). A thread that has locked but not yet unlocked the mucus is said to be holding (ofcourse, perfect sense). Finally, a semaphore invariant specifies that by definition, the invariant is never below 0.
-
 Adding a P and V operations before and after unsafe regions insures that only one thread is performing a set of (now protected) instructions at any given point in time.
-
 
 ### Scheduling Shared Resources
 

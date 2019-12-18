@@ -155,16 +155,16 @@ Many concurrent readers, exclusive writers, both unbounded. First, a preference 
 
 ## Parellelisms
 
-A parallel program is a concurrent program running on mutliple processors. Synchronization routines P and V are *EXTREMELY* expensive and should be avoided if possible or amortized over useful computation my guy. Properly synchronized threads run in parallel, with the mindset of coding one thread per core. Higher threads leads to more overhead introduced by context switching. There are three measures of performance here:
+A parallel program is a concurrent program running on mutliple processors. Synchronization routines P and V are *extremely* expensive and should be avoided if possible or amortized over useful computation. Higher threads leads to more overhead introduced by context switching however, so properly synchronized threads run in parallel, with the mindset of coding one thread per core. There are three measures of performance increase over sequential coding:
 
 1.  Running time. S<sub>p</sub> = T<sub>1</sub>/T<sub>p</sub>. Measures the absolute or relative running times depending on whether or not a comparison is being made to a sequential program or a parallel one running with a single thread. Also referred to as *strong scaling*.
-2.  Efficiency: E<sub>p</sub> = S<sub>p</sub>/p. Measures the amount of overhead introduced by parallelism.
+2.  Efficiency: E<sub>p</sub> = S<sub>p</sub>/p. Measures the amount of overhead introduced by parallelism, as given by the running time of one core as a percentage of the total running time of three cores working in parallel.
 
 ## Concurrency Issues
 
 1.  Static variables are not protected: library routines especially that store static variables and return pointers. A *lock-and-copy* technique is used in defining a wrapper function where the pointer is dereferenced and copied elsewhere after and before locking and unlocking the mutex.
 2.  Functions calling thread-unsafe functions.
 3.  Functions that do not protect shared variables.
-4.  Functions that keep state between invocations.
+4.  Functions that keep states between invocations.
 
-A simple solution to most of these issues is to use the linux standard reentrant functions of otherwise normal functions (with the suffix _r added), such as gethostbyaddr_r.
+A simple solution to most of these issues is to use the linux standard reentrant functions of otherwise normal functions (with the suffix _r added), such as gethostbyaddr_r. These functions rely on no global shared data.

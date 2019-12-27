@@ -4,9 +4,9 @@
 
 ## General Optimization:
 
-I.  Code motion: Be mindful of redundant operations; do once and store somewhere to be used later whenever needed.
-II. Strength reduction: Multiplication to shifting and addition, if possible. Compilers do this efficiently anyway, but it wouldn't hurt to account for it explicitly.
-III.    Common subexpressions: Reuse partial subexpressions in more complicated ones. It can reduce the number of operations which may save cost greatly (esecially in the case of multiplication instructions).
+I.	Code motion: repetitive operations whose value is immutable throughout execution may instead be subtituted with a stored variable on the stack or in register after a single operation.
+II.	Strength reduction: Multiplication to shifting and addition, if possible. Compilers do this efficiently anyway, but it would not hurt to account for it explicitly.
+III.	Common subexpressions: Reuse partial subexpressions in more complicated ones. It can reduce the number of operations which may save cost greatly (esecially in the case of multiplication instructions).
 
 
 ## Optimization blockers:
@@ -14,17 +14,19 @@ III.    Common subexpressions: Reuse partial subexpressions in more complicated 
 Specifically for compilers, some code aspects block certain optimizations. These include:
 
 I.  Memory aliases: if a compiler cannot determine whether or not pointers will be aliases/refer to the same location. *Use intermediate values for storage*.
-II. Function calls: repeated function calls are costly where a reduced number of  calls is not (bookeeping: parameters, local variables, rbp and rsi are saved/set each time). A functional call may need repeated calls however, blocking inline substituion. *Use inline substitution whenever possible*.
-
+II. Function calls: repeated function calls are costly where a reduced number of calls is not (bookeeping: parameters, local variables, rbp and rsi are saved/set each time). A function call may need repeated calls however, blocking inline substituion. *Use inline substitution whenever possible*.
 
 ## Critical paths & Overhead: 
 
-This deserves a section all by itself. Critical paths are chains of dependencies that slow down a program through repeated execution. This is only meaningful in the context of clock cycles spent per instruction, which in turn, is made clear after learning about the hardware of the cpu and what clocked registers and combinatorial circuits mean, and how they're updated. "Wasteful" time spent is a clock cycle wasted, which generally means (aside from optimizing basic arithmetic instructions) that a register was updated when it did not have to, or data was involved in a memory operation which otherwise could have been avoided. *Improving performance = reducing the number of operations per cycle*.
+Critical paths are chains of dependencies that slow down a program through repeated execution by blocking parallisms. This is only meaningful in the context of clock cycles spent per instruction, which in turn, is made clear after learning about the hardware of the cpu and what clocked registers and combinatorial circuits mean, and how they're updated. "Wasteful" time spent is a clock cycle wasted, which generally means (aside from optimizing basic arithmetic instructions) that a register was updated when it did not have to, or data was involved in a memory operation which otherwise could have been avoided. *Improving performance == reducing the number of operations per cycle*.
 
+## CPU Design
+
+Modern CPUs are superscalar in the sense that multiple instructions may be executed on every clock cycle and out of order. There are two main organizational parts; the instruction control unit (ICU) and the execution unit (EU). Detailed inner workings are complex, but the main gist of it is that instructions are fetched, and decoded (broken down into microinstructions) and sent to the EU where multiple instructions running on multiple functional units is performed each cycle. Addtionally, the entire process is speculative with tight controls to determine branching success or failure. An instruction is not fully retired until all associated branches leading up to it have been confirmed as correctly predicted, upon which the register file is updated.
 
 ## Latency Bounds: Reducing Operations
 
-There is latency, and there is issue. Latency is the time for one operation, issue is the number of operations completed per cycle in a series of operations. Most operations have an issue of 1 due to pipelining (segmenting an operation into smaller tasks). On top of that, there may be multiple copies of each functinal operation unit such as addition that allow parallelism. This introduces throughput, which is the same as issue but after parallelism is taken into account.
+There is latency, and there is issue. Latency is the time measured in clock cycles for one operation to complete from start to finish, while issue is the minimum number of cycles between two independent operations. Most operations have an issue of 1 due to pipelining (segmenting an operation into smaller tasks). On top of that, there may be multiple copies of each functinal operation unit such as addition that allow parallelism. This introduces throughput, which is the same as issue but after parallelism is taken into account; it is the reciprocal of the issue time multiplied by the number of functional units.
 
 The main goal of approaching latency bounds is through reducing overhead, and eliminating operations involved in loops that may form unnecessary dependancies (pointer arithmetic). It can be acheived by a number of techniques performed in sequence here.
 
@@ -159,9 +161,10 @@ data_t *get_vec_start(vec_ptr v){
 }
 ```
 
-### Loop Unrolling
+## Loop Unrolling
 
-Here, two or more elements are added at a time reducing overhead (which probably involves branch prediction and something else that happens within the loop aside from termination/initiation):
+Loop unrolling simply reduces loop overhead and unecessary operations such as branch prediction and condition checks by performing multiple operations within a single loop. It will allow operations to appraoch the latency bound, but not lower than that. Here, two or more elements are added at a time reducing overhead (which probably involves branch prediction and something else that happens within the loop aside from termination/initiation):
+
 ```c++
 
 void combine5  (vec_ptr v, data_t *dest){
@@ -228,7 +231,7 @@ void combine6  (vec_ptr v, data_t *dest){
 }
 
 
-*One dangerous implication of this method if splitting the inputs leads to overflow, such as the case where the majority of elements are very high on even indices, and very low on odd indices and the operation is multiplication. Be mindful*.
+*One dangerous implication of this method if splitting the inputs leads to overflow, such as the case where the majority of elements are very high on even indices, and very low on odd indices and the operation is multiplication.*.
 
 n operations are still performed, but independandtly in two's with each iteration of the loop.
 
